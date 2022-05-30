@@ -1,6 +1,7 @@
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
-import 'package:github_stats/models/repositry.dart';
+import 'package:github_stats/Widgets/repository_card.dart';
+import 'package:github_stats/models/repository.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:github_stats/models/user.dart';
@@ -17,7 +18,8 @@ class StatsApp extends StatelessWidget {
     return MaterialApp(
       title: 'Github Stats App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: const Color.fromARGB(255, 40, 43, 51),
+        primarySwatch: Colors.grey,
       ),
       home: const HomePage(
         title: 'Home Page',
@@ -26,6 +28,7 @@ class StatsApp extends StatelessWidget {
   }
 }
 
+// TODO: - remove to own class
 Future<User> fetchUser() async {
   var url = Uri.parse('https://api.github.com/users/dalalbinhumaid');
   final response = await http.get(url);
@@ -36,7 +39,7 @@ Future<User> fetchUser() async {
   }
 }
 
-Future<List<Repository>> fetchTrendingRepos() async {
+Future<List<Repository>?> fetchTrendingRepos() async {
   final fromDateTimestamp = DateTime.now().subtract(const Duration(days: 14));
   final fromDate = formatDate(fromDateTimestamp, [yyyy, '-', mm, '-', dd]);
 
@@ -49,11 +52,12 @@ Future<List<Repository>> fetchTrendingRepos() async {
   });
 
   final response = await http.get(uri);
+
   if (response.statusCode == 200) {
     final responseBody = jsonDecode(response.body);
     return Repository.fromJsonToList((responseBody['items']));
   } else {
-    throw Exception("Failed");
+    return null;
   }
 }
 
@@ -69,21 +73,61 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future<User> searchedUser;
 
+  List<Repository> _repositories = [];
+  bool _loading = false;
+  late String? _error;
+
   @override
   void initState() {
     super.initState();
-    fetchUser();
-    fetchTrendingRepos();
+
+    loadTrendingRepositories();
   }
 
+  void loadTrendingRepositories() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    final repos = await fetchTrendingRepos();
+
+    setState(() {
+      _loading = false;
+      if (repos != null) {
+        _repositories = repos;
+      } else {
+        _error = 'error :(';
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: const Center(
-        child: Text('Home'),
+      body: Center(
+        child: trendingList(context),
       ),
     );
+  }
+
+  Widget trendingList(BuildContext context) {
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    } else if (_error != null) {
+      return Center(
+        child: Text(_error!),
+      );
+    } else {
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+        itemCount: _repositories.length,
+        itemBuilder: (BuildContext context, int index) {
+          return RepositoryCard(_repositories[index]);
+        },
+      );
+    }
   }
 }

@@ -18,7 +18,7 @@ class Repository {
 
   factory Repository.fromJson(Map<String, dynamic> json) {
     return Repository(
-        url: json['url'],
+        url: json['html_url'],
         fullName: json['full_name'],
         description: json['description'],
         language: json['language'],
