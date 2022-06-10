@@ -17,9 +17,8 @@ class StatsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Github Stats App',
-      theme: ThemeData(
+      theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color.fromARGB(255, 40, 43, 51),
-        primarySwatch: Colors.grey,
       ),
       home: const HomePage(
         title: 'Home Page',
@@ -121,12 +120,15 @@ class _HomePageState extends State<HomePage> {
         child: Text(_error!),
       );
     } else {
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-        itemCount: _repositories.length,
-        itemBuilder: (BuildContext context, int index) {
-          return RepositoryCard(_repositories[index]);
-        },
+      return Padding(
+        padding: const EdgeInsets.only(top: 32.0),
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+          itemCount: _repositories.length,
+          itemBuilder: (BuildContext context, int index) {
+            return RepositoryCard(_repositories[index]);
+          },
+        ),
       );
     }
   }
